@@ -21,7 +21,13 @@ app.get("/", (req: Request, res: Response) => {
 // POST
 
 app.post("/", async (req: Request, res: Response) => {
-  console.log(req.body);
+  const body = req.body;
+
+  res.status(200).json({
+    success: true,
+    message: "Root route: POST Method route",
+    data: body,
+  });
 });
 
 app.listen(port, () => {
