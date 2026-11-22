@@ -20,11 +20,12 @@ const pool = new Pool({
 const initDB = async () => {
   try {
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS users2(
+      CREATE TABLE IF NOT EXISTS users(
       id SERIAL PRIMARY KEY,
-      NAME VARCHAR(255),
-      email VARCHAR(255) NOT NULL,
+      name VARCHAR(255),
+      email VARCHAR(255) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
+      age INT NOT NULL,
 
       is_Active BOOLEAN DEFAULT true,
 
@@ -52,14 +53,82 @@ app.get("/", (req: Request, res: Response) => {
 
 // POST
 
-app.post("/", async (req: Request, res: Response) => {
-  const { name, age, password } = req.body;
+app.post("/api/v1/users", async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, age } = req.body;
 
-  res.status(200).json({
-    success: true,
-    message: "Root route: POST Method route",
-    data: { name, age },
-  });
+    // creating a connection with DB, so that data can be inserted
+
+    const result = await pool.query(
+      `
+    INSERT INTO users (name, email, password, age) VALUES ($1, $2, $3, $4) RETURNING *
+    `,
+      [name, email, password, age],
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "User Created successfully",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create user",
+      error: error instanceof Error ? error.message : "unknown error occured!",
+    });
+  }
+});
+
+// post: Get all users
+
+app.get("/api/v1/users", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM users;
+      `);
+    // console.log(result.rows);
+    res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully",
+      data: result.rows,
+    });
+  } catch (error: any) {
+    console.error("Error getting all users:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to create user",
+      error: error instanceof Error ? error.message : "unknown error occured!",
+    });
+  }
+});
+
+// get a single users info
+
+app.get("/api/v1/users/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // or, req.params.id
+    const result = await pool.query(
+      `
+      SELECT * FROM users WHERE id = $1;
+      `,
+      [id],
+    );
+    // console.log(result.rows);
+    res.status(200).json({
+      success: true,
+      message: true,
+      data: result.rows,
+    });
+  } catch (error: any) {
+    console.log("Error getting a single user:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get the user",
+      error: error instanceof Error ? error.message : "The error is unknown",
+    });
+  }
 });
 
 app.listen(port, () => {
