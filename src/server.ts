@@ -1,5 +1,6 @@
 import express, { type Express, type Request, type Response } from "express";
 import { Pool } from "pg";
+import config from "./config";
 
 const app: Express = express();
 const port = 5000;
@@ -11,8 +12,7 @@ app.use(express.urlencoded({ extended: true })); // to handle both urlencoded an
 
 // database connection
 const pool = new Pool({
-	connectionString:
-		"postgresql://neondb_owner:npg_A8FSiwzt6qhP@ep-blue-sound-aoh52u9u.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=false&channel_binding=require",
+	connectionString: config.connection_string,
 });
 
 // DB query
@@ -216,6 +216,6 @@ app.delete("/api/v1/users/:id", async (req: Request, res: Response) => {
 	}
 });
 
-app.listen(port, () => {
-	console.log(`App is listening at ${port}`);
+app.listen(config.port, () => {
+	console.log(`App is listening at ${config.port}`);
 });
