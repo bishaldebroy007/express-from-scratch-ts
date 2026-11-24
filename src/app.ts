@@ -1,5 +1,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import { pool } from "./db";
+import { userRoute } from "./modules/users/user.route";
+import { userService } from "./modules/users/user.service";
 
 const app: Express = express();
 const port = 5000;
@@ -19,20 +21,14 @@ app.get("/", (req: Request, res: Response) => {
 	});
 });
 
-// POST
+// * middleware
 
+app.use("/api/v1/users", userRoute);
+
+// POST
 app.post("/api/v1/users", async (req: Request, res: Response) => {
 	try {
-		const { name, email, password, age } = req.body;
-
-		// creating a connection with DB, so that data can be inserted
-
-		const result = await pool.query(
-			`
-    INSERT INTO users (name, email, password, age) VALUES ($1, $2, $3, $4) RETURNING *
-    `,
-			[name, email, password, age],
-		);
+		const result = await userService.createUserIntoDB(req.body);
 
 		res.status(201).json({
 			success: true,
@@ -49,7 +45,7 @@ app.post("/api/v1/users", async (req: Request, res: Response) => {
 	}
 });
 
-// post: Get all users
+// Get: Get all users
 
 app.get("/api/v1/users", async (req: Request, res: Response) => {
 	try {
